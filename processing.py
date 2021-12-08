@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
+import csv
 
-ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ']
+ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ']
 
 def save_data(filename, df):
     """
@@ -16,39 +17,38 @@ def read_data(filename):
     """
     return pd.read_pickle(filename)
 
+def write_data_to_csv(filename, df, comparison):
+    with open(filename, 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
 
-def build_syllable_representation_old(word):
-    """
-    """
-    currently_reading_cons = True
-    representation = []
-    
-    #Edge case where the word starts with a vowel, but no stress
-    if word[0] in ipa_vowels:
-        representation.append(False)
-    
-    for cha in word:
-        if cha == "ˈ" and not currently_reading_cons:
-            representation.append(True)
-            currently_reading_cons = True
-        elif cha == "ˈ" and currently_reading_cons: #when we just read a cons, we appended a false, which needs to be switched to a True
-            if len(representation) > 0:
-                representation[-1] = True
-            else:
-                representation.append(True)
-        elif cha in ipa_vowels:
-            currently_reading_cons = False
-        elif cha not in ipa_vowels and not currently_reading_cons:
-            representation.append(False)
-            currently_reading_cons = True
-    if word[-1] not in ipa_vowels and len(representation) >0: #In this case, it counts the coda of the final syllable as a new syllable, which it should not
-        representation.pop()
-    #print(word, representation)
-    return representation
+        # write the header
+        writer.writerow(['model','actual','stressmodel','stressactual'])
+
+        # write the data
+        for w,v in collect_nonmatches(df, comparison):
+            writer.writerow([w, v, build_syllable_representation(w), build_syllable_representation(v)])
+
+def write_stats_to_csv(filename, a,b,c,d,e):
+    '''
+    stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act
+    '''
+    with open(filename, 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+
+        # write the header
+        writer.writerow(['number','modellengthall','actuallengthall','lengthmatch', 'modellengthnonmatch', 'actuallengthnonmatch'])
+
+        # write the data
+        for i in range(10):
+            writer.writerow([i, a[i], b[i], c[i], d[i], e[i]])
+
     
     
 def build_syllable_representation(word):
     """
+    word: the word of which you want the syllable representation
+    
+    Returns the representation of the syllable in the form of a list of booleans, where true represents stressed and false unstressed
     """
     representation = []
     stressed = False
@@ -109,18 +109,40 @@ def collect_nonmatches(df, comparison):
             cases.append((df.model[i], df.actual[i]))
     return cases
 
+def statistics(df, comparison, save=False):
+    stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act = {}, {}, {}, {}, {}
+    for i in np.arange(10):
+        stats_mod[i] = 0
+        stats_act[i] = 0
+        stats_match[i] = 0
+        stats_nonmatch_mod[i] = 0
+        stats_nonmatch_act[i] = 0
+    print(comparison)
+    for i, boolean in enumerate(comparison):
+        rep_mod = build_syllable_representation(df.model[i])
+        rep_act = build_syllable_representation(df.actual[i])
+        stats_mod[len(rep_mod)] += 1
+        stats_act[len(rep_act)] += 1
+        if boolean:
+            stats_match[len(rep_mod)] += 1
+        else:
+            stats_nonmatch_mod[len(rep_mod)] += 1
+            stats_nonmatch_act[len(rep_act)] += 1
+    print(stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act)
+    if save:
+        write_stats_to_csv('stats.csv', stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act)
 
 
 df = read_data("data.pkl")
-print(df)
+#print(df)
 
-for word in df.model.head():
-    build_syllable_representation(word)
+#for word in df.model.head():
+#    build_syllable_representation(word)
     #print("".join(c for c in word if c.lower() not in ipa_vowels))
 
-build_syllable_representation("anˈkledən")
-build_syllable_representation("ankleˈdən")
-print(list(map(build_syllable_representation,df.actual)))
+#build_syllable_representation("anˈkledən")
+#build_syllable_representation("ankleˈdən")
+#print(list(map(build_syllable_representation,df.actual)))
 #print(np.bitwise_xor(
 #    np.asarray(list(map(build_syllable_representation,df.model))),
 #    np.asarray(list(map(build_syllable_representation, df.actual)))
@@ -131,5 +153,7 @@ comparison, unequal_lengths = compare_actual_model(df.model, df.actual)
 print(len(comparison) - np.sum(comparison))
 print(len(unequal_lengths))
 #print(collect_nonmatches(df, comparison))
-for w,v in collect_nonmatches(df, comparison):
-    print(w, v, build_syllable_representation(w), build_syllable_representation(v))
+#for w,v in collect_nonmatches(df, comparison):
+#    print(w, v, build_syllable_representation(w), build_syllable_representation(v))
+statistics(df, comparison, save = True)
+#write_data_to_csv('datacsv.csv', df, comparison)
