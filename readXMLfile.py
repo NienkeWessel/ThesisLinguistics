@@ -127,7 +127,7 @@ filenames = find_files()
 #save_data("test.pkl", df2)
 
 # Make empty data frame for the loop
-df = pd.DataFrame(columns=['Name','Age','word','model','actual'])
+df = pd.DataFrame(columns=['Name','Age','word','model','realization'])
 
 # Loop through all the files and append to current dataframe
 for filename in filenames:

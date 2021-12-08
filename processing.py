@@ -22,7 +22,7 @@ def write_data_to_csv(filename, df, comparison):
         writer = csv.writer(f)
 
         # write the header
-        writer.writerow(['model','actual','stressmodel','stressactual'])
+        writer.writerow(['model','realization','stressmodel','stressrealization'])
 
         # write the data
         for w,v in collect_nonmatches(df, comparison):
@@ -36,7 +36,7 @@ def write_stats_to_csv(filename, a,b,c,d,e):
         writer = csv.writer(f)
 
         # write the header
-        writer.writerow(['number','modellengthall','actuallengthall','lengthmatch', 'modellengthnonmatch', 'actuallengthnonmatch'])
+        writer.writerow(['number','modellengthall','realizationlengthall','lengthmatch', 'modellengthnonmatch', 'realizationlengthnonmatch'])
 
         # write the data
         for i in range(10):
@@ -65,32 +65,21 @@ def build_syllable_representation(word):
             vowels = False
     return representation
 
-def compare_arrays(model, actual):
-    assert(len(model) == len(actual))
-    
-    comparison = []
-    
-    for i in np.arange(len(model)):
-        if len(model[i]) != len(actual[i]):
-            print("not equal length", i, model, actual)
-            continue
-        for j in np.arange(len(model[i])):
-            if model[i][j] != actual[i][j]:
-                comparison.append(False)
-                continue
-        comparison.append(True)
-    return comparison
 
-def compare_actual_model(model, actual):
-    assert(len(model) == len(actual))
+
+def compare_realization_model(model, realization):
+    '''
+    
+    '''
+    assert(len(model) == len(realization))
     
     comparison = []
     unequal_lengths = []
     for i in np.arange(len(model)):
         mod_word = build_syllable_representation(model[i])
-        act_word = build_syllable_representation(actual[i])
+        act_word = build_syllable_representation(realization[i])
         if len(mod_word) != len(act_word):
-            print("not equal length", i, mod_word, act_word)
+            #print("not equal length", i, mod_word, act_word)
             unequal_lengths.append(i)
             comparison.append(False)
             continue
@@ -106,10 +95,18 @@ def collect_nonmatches(df, comparison):
     cases = []
     for i, boolean in enumerate(comparison):
         if not boolean:
-            cases.append((df.model[i], df.actual[i]))
+            cases.append((df.model[i], df.realization[i]))
     return cases
 
 def statistics(df, comparison, save=False):
+    '''
+    df: the data frame on which the statistics need to be calculated
+    comparison: the list of booleans where true indicates model and realization match, and false that they do not match
+    save: optional argument on whether to save the statistics to a csv file
+    
+    returns five dictionaries with statistics
+    TODO TODO TODO 
+    '''
     stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act = {}, {}, {}, {}, {}
     for i in np.arange(10):
         stats_mod[i] = 0
@@ -117,10 +114,10 @@ def statistics(df, comparison, save=False):
         stats_match[i] = 0
         stats_nonmatch_mod[i] = 0
         stats_nonmatch_act[i] = 0
-    print(comparison)
+    #print(comparison)
     for i, boolean in enumerate(comparison):
         rep_mod = build_syllable_representation(df.model[i])
-        rep_act = build_syllable_representation(df.actual[i])
+        rep_act = build_syllable_representation(df.realization[i])
         stats_mod[len(rep_mod)] += 1
         stats_act[len(rep_act)] += 1
         if boolean:
@@ -128,32 +125,23 @@ def statistics(df, comparison, save=False):
         else:
             stats_nonmatch_mod[len(rep_mod)] += 1
             stats_nonmatch_act[len(rep_act)] += 1
-    print(stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act)
+    #print(stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act)
     if save:
         write_stats_to_csv('stats.csv', stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act)
+    return stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act
 
 
-df = read_data("data.pkl")
+df = read_data("data2.pkl")
 #print(df)
 
-#for word in df.model.head():
-#    build_syllable_representation(word)
-    #print("".join(c for c in word if c.lower() not in ipa_vowels))
 
-#build_syllable_representation("anˈkledən")
-#build_syllable_representation("ankleˈdən")
-#print(list(map(build_syllable_representation,df.actual)))
-#print(np.bitwise_xor(
-#    np.asarray(list(map(build_syllable_representation,df.model))),
-#    np.asarray(list(map(build_syllable_representation, df.actual)))
-#    ))
-#print(compare_arrays(list(map(build_syllable_representation,df.model)), list(map(build_syllable_representation,df.actual))))
-#print(np.sum( )
-comparison, unequal_lengths = compare_actual_model(df.model, df.actual)
+comparison, unequal_lengths = compare_realization_model(df.model, df.realization)
 print(len(comparison) - np.sum(comparison))
 print(len(unequal_lengths))
+
 #print(collect_nonmatches(df, comparison))
 #for w,v in collect_nonmatches(df, comparison):
 #    print(w, v, build_syllable_representation(w), build_syllable_representation(v))
+
 statistics(df, comparison, save = True)
 #write_data_to_csv('datacsv.csv', df, comparison)
