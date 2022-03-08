@@ -8,8 +8,8 @@ import unittest
 
 
 
-ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝', '͡'] 
-agnostic_symbols = ['͡']
+ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝']#, '͡'] 
+agnostic_symbols = ['͡', 'ː'] # symbols that can either be a vowel or consonant
 
 def save_data(filename, df):
     """
@@ -37,7 +37,7 @@ def append_representation_to_dataframe(df):
     df['rep_realization'] = df.realization.apply(build_syllable_representation)
     #print(df)
 
-def write_data_to_csv(filename, df, comparison, header = ['Name', 'Age', 'word', 'model','realization','stressmodel','stressrealization'], apply_filter=True):
+def write_nonmatches_to_csv(filename, df, comparison, header = ['Name', 'Age', 'word', 'model','realization','stressmodel','stressrealization'], apply_filter=True):
     with open(filename, 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
 
@@ -54,6 +54,10 @@ def write_data_to_csv(filename, df, comparison, header = ['Name', 'Age', 'word',
                 # If at least one of the two representations has 2 or more syllables, then we are interested
                 if len(rep_w) >= 2 or len(rep_v) >= 2: 
                     writer.writerow([n,a,word,w, v, rep_w, rep_v])
+
+def write_df_to_csv(filename, df):
+    df.to_csv(filename)
+
 
 def write_stats_to_csv(filename, a,b,c,d,e):
     '''
@@ -77,6 +81,7 @@ def build_syllable_representation(word, secondary=False):
     
     Returns the representation of the syllable in the form of a list of booleans, where true represents stressed and false unstressed
     """
+    
     representation = []
     stressed = False
     vowels = False
@@ -91,16 +96,16 @@ def build_syllable_representation(word, secondary=False):
                 vowels = True
                 representation.append(stressed)
                 stressed = False
-        else:
+        elif c not in agnostic_symbols: #if we do not know whether something is a vowel or consonant, we leave it be. If it is not a vowel and not agnostic, we have a consonant
             vowels = False
     return representation
 
 class MyTest(unittest.TestCase):
     def test_build_syllable_representation(self, secondary=False):
-    '''
-    Tests the build_syllable_representation function with different examples
-    Also used to see if something breaks after adjusting
-    '''
+        '''
+        Tests the build_syllable_representation function with different examples
+        Also used to see if something breaks after adjusting
+        '''
     
         if not secondary:
             #one syllable word, with bridge
@@ -110,10 +115,10 @@ class MyTest(unittest.TestCase):
             self.assertEqual([False, True], build_syllable_representation('koːˈlɛin'))
             self.assertEqual([True, False], build_syllable_representation('ˈpukə'))
             
-            
+            #other
             self.assertEqual([True, False, False], build_syllable_representation('ˈʔaːˌkleːdə'))
             
-            self.assertEqual([True, False, False], build_syllable_representation('ˈpinoːŭ'))
+            self.assertEqual([True, False], build_syllable_representation('ˈpinoːŭ'))
             self.assertEqual([True, False, False], build_syllable_representation('ˈzeˌot͡jɑ̈s'))
 
 
@@ -237,8 +242,8 @@ print(len(unequal_lengths))
 #    print(w, v, build_syllable_representation(w), build_syllable_representation(v))
 
 #statistics(df, comparison, save = True)
-#write_data_to_csv('datacsvnew.csv', df, comparison)
+#write_nonmatches_to_csv('datacsvnewnew.csv', df, comparison)
 
 
-#print(filter_iambic_bisyllabic_words(df))
-#print(append_representation_to_dataframe(df))
+print(filter_iambic_bisyllabic_words(df))
+write_df_to_csv('iamb_bisyl.csv', filter_iambic_bisyllabic_words(df))
