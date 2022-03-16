@@ -100,6 +100,15 @@ def build_syllable_representation(word, secondary=False):
             vowels = False
     return representation
 
+
+def is_final_syllable_heavy(word):
+    if word[-1] in ipa_vowels:
+        # if the last letter is a vowel, we only have a heavy syllable if it is a diphtong, so if the letter before it is also a vowel
+        return word[-2] in ipa_vowels
+    else: #so final letter in agnostic_symbols or consonants
+        return True
+
+
 class MyTest(unittest.TestCase):
     def test_build_syllable_representation(self, secondary=False):
         '''
@@ -121,7 +130,15 @@ class MyTest(unittest.TestCase):
             self.assertEqual([True, False], build_syllable_representation('ˈpinoːŭ'))
             self.assertEqual([True, False, False], build_syllable_representation('ˈzeˌot͡jɑ̈s'))
 
-
+    def test_is_final_syllable_heavy(self):
+        self.assertEqual(True, is_final_syllable_heavy('ˈzeˌot͡jɑ̈s'))
+        self.assertEqual(True, is_final_syllable_heavy('koːˈlɛin'))
+        self.assertEqual(True, is_final_syllable_heavy('koˈnɛi'))
+        self.assertEqual(False, is_final_syllable_heavy('ˈpukə'))
+        self.assertEqual(True, is_final_syllable_heavy('ˈbu̠t͡s'))
+        self.assertEqual(True, is_final_syllable_heavy('kˈɑpχː'))
+        self.assertEqual(True, is_final_syllable_heavy('neː'))
+        self.assertEqual(True, is_final_syllable_heavy('fiˈjoʋ')) 
 
     
         
@@ -214,6 +231,40 @@ def statistics(df, comparison, save=False):
         write_stats_to_csv('stats.csv', stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act)
     return stats_mod, stats_act, stats_match, stats_nonmatch_mod, stats_nonmatch_act
 
+
+def collect_different_words(df):
+    '''
+    df: complete data set including representations
+    '''
+    words = set()
+    for word in df['model']:
+        words.add(word)
+    return words
+
+def make_df_words_repr(words):
+    df = pd.DataFrame(columns=['word','representation'])
+    for word in words:
+        df = df.append({'word': word, 'representation': build_syllable_representation(word)}, ignore_index=True)
+    return df
+
+def stringify_representation(representation):
+    '''
+    representation: list of booleans (representing stress pattern
+    
+    returns: string of the stress pattern
+    '''
+    string = ""
+    for boolean in representation: 
+        if boolean:
+            string += 'T'
+        else:
+            string += 'F'
+    return string
+
+def calculate_nr_word_types(df):
+    strings = df['representation'].apply(stringify_representation)
+    print(strings.value_counts())
+
 def filter_iambic_bisyllabic_words(df):
     filter_bisyl = [True if l==2 else False for l in df.rep_model.apply(len) ]#df.rep_model.apply(len) #and df.rep_model[1]
     #print(filter_iamb)
@@ -221,11 +272,14 @@ def filter_iambic_bisyllabic_words(df):
     filter_iamb = [r[1] for r in filtered.rep_model]
     return filtered[filter_iamb] #Second thing returns booleans, we are interested when these are True
 
-def get_odd_syllables():
-    return
+
+
+def add_heavy_fin_syl_column(df):
+    df['heavy_final_syl'] = df.model.apply(is_final_syllable_heavy)
 
 test = MyTest()
 test.test_build_syllable_representation()
+test.test_is_final_syllable_heavy()
 
 df = read_data("data2.pkl")
 append_representation_to_dataframe(df)
@@ -244,6 +298,19 @@ print(len(unequal_lengths))
 #statistics(df, comparison, save = True)
 #write_nonmatches_to_csv('datacsvnewnew.csv', df, comparison)
 
+def iambic_bysyl_investigation():
+    iamb_bisyl = filter_iambic_bisyllabic_words(df)
+    add_heavy_fin_syl_column(iamb_bisyl)
+    print(iamb_bisyl)
+    print(np.sum(iamb_bisyl.heavy_final_syl))
+    print(iamb_bisyl[ [not b for b in iamb_bisyl.heavy_final_syl] ])
 
-print(filter_iambic_bisyllabic_words(df))
-write_df_to_csv('iamb_bisyl.csv', filter_iambic_bisyllabic_words(df))
+#write_df_to_csv('iamb_bisyl.csv', filter_iambic_bisyllabic_words(df))
+
+def word_type_investigation():
+    words = collect_different_words(df)
+    words_reprs = make_df_words_repr(words)
+    calculate_nr_word_types(words_reprs)
+    print(words_reprs)
+
+word_type_investigation()
