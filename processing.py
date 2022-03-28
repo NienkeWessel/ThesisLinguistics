@@ -2,7 +2,12 @@ import pandas as pd
 import numpy as np
 import csv
 import unittest
+import matplotlib.pyplot as plt
 
+
+def tolerance_formula(N, e):
+    print(N, e)
+    return e <= N/np.log(N)
 
 # ----------------------------------------------
 class Word:
@@ -19,6 +24,14 @@ class Word:
     def __hash__(self):
         return self.written.__hash__()
 
+    def is_bisyl(self):
+        return len(self.rep_model) == 2
+    
+    def is_iambic_bisyl(self):
+        if len(self.rep_model) == 2:
+            return self.rep_model[1]
+        else:
+            return False 
 
 # ----------------------------------------------
 class WordList:
@@ -72,8 +85,49 @@ class ChildDevelopment:
                 total_wordlist.add(word)
             development.append(len(total_wordlist))
         return development
+    
+    def calculate_bisyl_vocab_dev(self):
+        '''
+        
+        Add something similar for the dates so that we have those
+        '''
+        print(self.wordlists[0])
+        development_bisyl = []
+        development_bisyl_iamb = []
+        total_wordlist_bisyl = set()
+        total_wordlist_bisyl_iamb = set()
+        for wordlist in self.wordlists:
             
-
+            for word in wordlist.wordlist:
+                if word.is_bisyl():
+                    total_wordlist_bisyl.add(word)
+                if word.is_iambic_bisyl():
+                    total_wordlist_bisyl_iamb.add(word)
+            development_bisyl.append(len(total_wordlist_bisyl))
+            development_bisyl_iamb.append(len(total_wordlist_bisyl_iamb))
+        
+        
+        return development_bisyl, development_bisyl_iamb
+    
+    def determine_tolerance(self, total, exceptions):
+        tolerance = []
+        for i in range(len(total)):
+            tolerance.append(tolerance_formula(total[i], exceptions[i]))
+        print(tolerance)
+        
+    
+    def plot_vocab_dev(self):
+        development_bisyl, development_bisyl_iamb = self.calculate_bisyl_vocab_dev()
+        total_dev = self.calculate_total_vocab_dev()
+        
+        self.determine_tolerance(development_bisyl, development_bisyl_iamb)
+        
+        plt.plot(total_dev, label='Total vocabulary')
+        plt.plot(development_bisyl, label='Bisyllabic words')
+        plt.plot(development_bisyl_iamb, label='Bisyllabic iambic words')
+        plt.title('Development of ' + self.name)
+        plt.legend()
+        plt.show()
 # ----------------------------------------------
 
 
@@ -413,11 +467,15 @@ def trisyl_investigation(df):
     df_trisyl_unique = df_trisyl.drop_duplicates(subset = ["word"])
     write_df_to_csv('trisyl_unique.csv', df_trisyl_unique)
 
-
+def investigate_child_development(name):
+    child = build_wordlist_for_child(name, df)
+    #print(leon.wordlists[0])
+    child.calculate_total_vocab_dev()
+    
 
 #word_type_investigation()
-leon = build_wordlist_for_child('Leon', df)
+leon = build_wordlist_for_child('Elke', df)
 print(leon.wordlists[0])
-print(leon.calculate_total_vocab_dev())
+print(leon.plot_vocab_dev())
 
 #word_type_investigation()
