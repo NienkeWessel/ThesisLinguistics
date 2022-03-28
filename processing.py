@@ -16,6 +16,8 @@ class Word:
     def __eq__(self, other):
         return self.written == other.written
     
+    def __hash__(self):
+        return self.written.__hash__()
 
 
 # ----------------------------------------------
@@ -35,7 +37,7 @@ class WordList:
         return "%s" % (self.time)
     
     
-    def add_word(word):
+    def add_word(self, word):
         self.wordlist.add(word)
 
     def add_prev_state_wordlist(prev_wordlist):
@@ -57,7 +59,19 @@ class ChildDevelopment:
         self.wordlists.append(wordlist)
     
     def calculate_total_vocab_dev(self):
-        for wordlist in wordlists:
+        '''
+        
+        Add something similar for the dates so that we have those
+        '''
+        print(self.wordlists[0])
+        development = []
+        total_wordlist = set()
+        for wordlist in self.wordlists:
+            
+            for word in wordlist.wordlist:
+                total_wordlist.add(word)
+            development.append(len(total_wordlist))
+        return development
             
 
 # ----------------------------------------------
@@ -380,14 +394,14 @@ def build_wordlist_for_child(name, df):
     child_dev = ChildDevelopment(name)
     wordlist = WordList('P1Y10M28DT0H0M0S')
     for index, data_point in df_child.iterrows(): # Might be slow, see https://stackoverflow.com/questions/16476924/how-to-iterate-over-rows-in-a-dataframe-in-pandas
-        print(data_point)
+        #print(data_point)
         time = data_point['Age']
         if prev_time != time: # klopt geen drol van, off by one error
             child_dev.add_wordlist(wordlist)
             wordlist = WordList(time)
         
         word = Word(data_point['word'], data_point['model'], data_point['realization'], data_point['rep_model'], data_point['rep_realization'])
-        
+        wordlist.add_word(word)
         
         prev_time = time
     return(child_dev)
@@ -399,8 +413,11 @@ def trisyl_investigation(df):
     df_trisyl_unique = df_trisyl.drop_duplicates(subset = ["word"])
     write_df_to_csv('trisyl_unique.csv', df_trisyl_unique)
 
+
+
 #word_type_investigation()
 leon = build_wordlist_for_child('Leon', df)
 print(leon.wordlists[0])
+print(leon.calculate_total_vocab_dev())
 
 #word_type_investigation()
