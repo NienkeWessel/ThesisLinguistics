@@ -4,8 +4,63 @@ import csv
 import unittest
 
 
+# ----------------------------------------------
+class Word:
+    def __init__(self, written, model, realization, rep_model, rep_realization):
+        self.written = written
+        self.model = model
+        self.realization = realization
+        self.rep_model = rep_model
+        self.rep_realization = rep_realization
+    
+    def __eq__(self, other):
+        return self.written == other.written
+    
 
 
+# ----------------------------------------------
+class WordList:
+    
+    def __init__(self, time ):
+        '''
+        time: the point in time to which this wordlist refers
+        '''
+        self.time = time
+        self.wordlist = set()
+        
+    def __cmp__(self, other):
+        return cmp(self.time, other.time)
+    
+    def __repr__(self):
+        return "%s" % (self.time)
+    
+    
+    def add_word(word):
+        self.wordlist.add(word)
+
+    def add_prev_state_wordlist(prev_wordlist):
+        for word in prev_wordlist.wordlist:
+            self.wordlist.add(word)
+            
+# ----------------------------------------------
+class ChildDevelopment:
+    
+    def __init__(self, name ):
+        '''
+        name: child's name (just for bookkeeping purposes)
+        '''
+        self.name = name
+        self.wordlists = []
+    
+    
+    def add_wordlist(self, wordlist):
+        self.wordlists.append(wordlist)
+    
+    def calculate_total_vocab_dev(self):
+        for wordlist in wordlists:
+            
+
+# ----------------------------------------------
 
 
 ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝']#, '͡'] 
@@ -271,6 +326,11 @@ def filter_iambic_bisyllabic_words(df):
     filtered = df[filter_bisyl]
     filter_iamb = [r[1] for r in filtered.rep_model]
     return filtered[filter_iamb] #Second thing returns booleans, we are interested when these are True
+    
+def filter_trisyllabic_words(df):
+    filter_trisyl = [True if l==3 else False for l in df.rep_model.apply(len) ]#df.rep_model.apply(len) #and df.rep_model[1]
+    #print(filter_iamb)
+    return df[filter_trisyl]
 
 
 
@@ -313,4 +373,34 @@ def word_type_investigation():
     calculate_nr_word_types(words_reprs)
     print(words_reprs)
 
-word_type_investigation()
+def build_wordlist_for_child(name, df):
+    df_child = df[df['Name'] == name]
+    print(df_child)
+    prev_time = 'P1Y10M28DT0H0M0S'
+    child_dev = ChildDevelopment(name)
+    wordlist = WordList('P1Y10M28DT0H0M0S')
+    for index, data_point in df_child.iterrows(): # Might be slow, see https://stackoverflow.com/questions/16476924/how-to-iterate-over-rows-in-a-dataframe-in-pandas
+        print(data_point)
+        time = data_point['Age']
+        if prev_time != time: # klopt geen drol van, off by one error
+            child_dev.add_wordlist(wordlist)
+            wordlist = WordList(time)
+        
+        word = Word(data_point['word'], data_point['model'], data_point['realization'], data_point['rep_model'], data_point['rep_realization'])
+        
+        
+        prev_time = time
+    return(child_dev)
+
+def trisyl_investigation(df):
+    # main function to collect trisyllabic words
+    df_trisyl = filter_trisyllabic_words(df)
+    write_df_to_csv('trisyl.csv', df_trisyl)
+    df_trisyl_unique = df_trisyl.drop_duplicates(subset = ["word"])
+    write_df_to_csv('trisyl_unique.csv', df_trisyl_unique)
+
+#word_type_investigation()
+leon = build_wordlist_for_child('Leon', df)
+print(leon.wordlists[0])
+
+#word_type_investigation()
