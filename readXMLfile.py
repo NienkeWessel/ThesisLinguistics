@@ -132,12 +132,14 @@ filenames = find_files(root_folder='../Grimm')
 #save_data("test.pkl", df2)
 
 # Make empty data frame for the loop
-df = pd.DataFrame(columns=['Name','Age','word','model','realization'])
+df = pd.DataFrame(columns=['Name','Age','word','model','actual'])
 
 # Loop through all the files and append to current dataframe
 for filename in filenames:
     print('file opened: ' + filename)
     df = readXMLfile(filename, df)
+
+df.rename(columns={'actual': 'realization'}, inplace=True)
 
 print(df)
 # Save data frame to pickle file

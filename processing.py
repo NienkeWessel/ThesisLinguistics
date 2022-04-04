@@ -482,15 +482,15 @@ test = MyTest()
 test.test_build_syllable_representation()
 test.test_is_final_syllable_heavy()
 
-df = read_data("data2.pkl")
+df = read_data("Grimm.pkl")
 append_representation_to_dataframe(df)
 print(df)
+write_df_to_csv('Grimm.csv', df)
 
 
-
-comparison, unequal_lengths = compare_realization_model(df.model, df.realization)
-print(len(comparison) - np.sum(comparison))
-print(len(unequal_lengths))
+#comparison, unequal_lengths = compare_realization_model(df.model, df.realization)
+#print(len(comparison) - np.sum(comparison))
+#print(len(unequal_lengths))
 
 #print(collect_nonmatches(df, comparison))
 #for w,v in collect_nonmatches(df, comparison):
@@ -545,10 +545,10 @@ def investigate_child_development(name):
     #print(leon.wordlists[0])
     child.calculate_total_vocab_dev()
     
-children_names = ['Catootje', 'David', 'Elke', 'Enzo', 'Eva', 'Jarmo', 'Leon', 'Leonie', 'Noortje', 'Robin', 'Tirza', 'Tom']
+#children_names = ['Catootje', 'David', 'Elke', 'Enzo', 'Eva', 'Jarmo', 'Leon', 'Leonie', 'Noortje', 'Robin', 'Tirza', 'Tom']
 #word_type_investigation()
-leon = build_wordlist_for_child('Jarmo', df)
-print(leon.wordlists[0])
-print(leon.plot_vocab_dev(['TFF', 'FTF']))
+#leon = build_wordlist_for_child('Jarmo', df)
+#print(leon.wordlists[0])
+#print(leon.plot_vocab_dev(['TFF', 'FTF']))
 
 #word_type_investigation()
