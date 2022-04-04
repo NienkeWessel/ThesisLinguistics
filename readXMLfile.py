@@ -25,7 +25,10 @@ def readXMLfile(filename, df = pd.DataFrame(columns=['Name','Age','word','model'
     #use getElementsByTagName() to get tag
     session = f.getElementsByTagName('session')[0]
     child_name = session.getElementsByTagName('participants')[0].getElementsByTagName('participant')[0].getElementsByTagName('name')[0].firstChild.data
-    child_age = session.getElementsByTagName('participants')[0].getElementsByTagName('participant')[0].getElementsByTagName('age')[0].firstChild.data
+    try: 
+        child_age = session.getElementsByTagName('participants')[0].getElementsByTagName('participant')[0].getElementsByTagName('age')[0].firstChild.data
+    except:
+        child_age = 'N/A'
     
     transcript = session.getElementsByTagName('transcript')[0].getElementsByTagName('u')
     for u in transcript: 
@@ -99,6 +102,8 @@ def find_files(root_folder='../CLPF'):
     matches = []
     for root, dirnames, filenames in os.walk(root_folder):
         for filename in fnmatch.filter(filenames, '*.xml'):
+            if 'project' in filename:
+                continue
             matches.append(os.path.join(root, filename))
     return matches
 
@@ -119,7 +124,7 @@ def read_data(filename):
 
 
 # Collect all the file names, you can give it a root folder if you want to
-filenames = find_files()
+filenames = find_files(root_folder='../Grimm')
 #print(filenames)
 
 # To test if it all works (and it does (or did, at least))
@@ -131,9 +136,10 @@ df = pd.DataFrame(columns=['Name','Age','word','model','realization'])
 
 # Loop through all the files and append to current dataframe
 for filename in filenames:
+    print('file opened: ' + filename)
     df = readXMLfile(filename, df)
 
 print(df)
 # Save data frame to pickle file
-save_data("data.pkl", df)
+save_data("Grimm.pkl", df)
 
