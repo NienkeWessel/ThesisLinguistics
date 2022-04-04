@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 
 
 def tolerance_formula(N, e):
+    '''
+    Tolerance formula from Yang, p. 9
+    '''
     print(N, e)
     return e <= N/np.log(N)
 
@@ -32,6 +35,30 @@ class Word:
             return self.rep_model[1]
         else:
             return False 
+    
+    def matches_pattern(self, pattern):
+        '''
+        Calculates whether the word matches the stress pattern
+        
+        pattern: string of F(alse) and T(rue) or A(gnostic) indicating the stress placement
+        Agnostic (or any other symbol can be used to indicate that one does not care about the stress placement
+        
+        return: 
+        '''
+        
+        # Initial check for length match. If not equal, no point in persuing
+        if len(pattern) != len(self.rep_model):
+            return False
+        
+        for i,c in enumerate(pattern):
+            if c == 'T':
+                if not self.rep_model[i]:
+                    return False
+            if c == 'F':
+                if self.rep_model[i]:
+                    return False
+        return True
+        
 
 # ----------------------------------------------
 class WordList:
@@ -73,8 +100,9 @@ class ChildDevelopment:
     
     def calculate_total_vocab_dev(self):
         '''
+        Calculates 
         
-        Add something similar for the dates so that we have those
+        Todo: Add something similar for the dates so that we have those
         '''
         print(self.wordlists[0])
         development = []
@@ -89,7 +117,7 @@ class ChildDevelopment:
     def calculate_bisyl_vocab_dev(self):
         '''
         
-        Add something similar for the dates so that we have those
+        Todo: Add something similar for the dates so that we have those
         '''
         print(self.wordlists[0])
         development_bisyl = []
@@ -109,6 +137,36 @@ class ChildDevelopment:
         
         return development_bisyl, development_bisyl_iamb
     
+    def calculate_development_by_patterns(self, patterns):
+        '''
+        Calculates the wordlists for a list of patterns and the total development
+        For efficiency, this is done at once (building wordlists is expensive)
+        
+        patterns: the patterns one wants the developments of
+        return: list of developments for the patterns
+        '''
+        developments_counts = {}
+        developments = {}
+        
+        for p in patterns:
+            developments[p] = set()
+            developments_counts[p] = []
+        
+        
+        for wordlist in self.wordlists:
+            
+            for word in wordlist.wordlist:
+                for p in patterns:
+                    if word.matches_pattern(p):
+                        developments[p].add(word)
+            for p in patterns:
+                developments_counts[p].append(len(developments[p]))
+            
+        
+        
+        return developments_counts, developments
+        
+    
     def determine_tolerance(self, total, exceptions):
         tolerance = []
         for i in range(len(total)):
@@ -116,7 +174,7 @@ class ChildDevelopment:
         print(tolerance)
         
     
-    def plot_vocab_dev(self):
+    def plot_vocab_dev_bisyl(self):
         development_bisyl, development_bisyl_iamb = self.calculate_bisyl_vocab_dev()
         total_dev = self.calculate_total_vocab_dev()
         
@@ -128,6 +186,21 @@ class ChildDevelopment:
         plt.title('Development of ' + self.name)
         plt.legend()
         plt.show()
+    
+    
+    def plot_vocab_dev(self, patterns):
+        developments_counts, developments = self.calculate_development_by_patterns(patterns)
+        total_dev = self.calculate_total_vocab_dev()
+        
+        #self.determine_tolerance(development_bisyl, development_bisyl_iamb)
+        
+        plt.plot(total_dev, label='Total vocabulary')
+        for p in patterns:
+            plt.plot(developments_counts[p], label=p)
+        plt.title('Development of ' + self.name)
+        plt.legend()
+        plt.show()
+    
 # ----------------------------------------------
 
 
@@ -450,7 +523,7 @@ def build_wordlist_for_child(name, df):
     for index, data_point in df_child.iterrows(): # Might be slow, see https://stackoverflow.com/questions/16476924/how-to-iterate-over-rows-in-a-dataframe-in-pandas
         #print(data_point)
         time = data_point['Age']
-        if prev_time != time: # klopt geen drol van, off by one error
+        if prev_time != time: 
             child_dev.add_wordlist(wordlist)
             wordlist = WordList(time)
         
@@ -472,10 +545,10 @@ def investigate_child_development(name):
     #print(leon.wordlists[0])
     child.calculate_total_vocab_dev()
     
-
+children_names = ['Catootje', 'David', 'Elke', 'Enzo', 'Eva', 'Jarmo', 'Leon', 'Leonie', 'Noortje', 'Robin', 'Tirza', 'Tom']
 #word_type_investigation()
-leon = build_wordlist_for_child('Elke', df)
+leon = build_wordlist_for_child('Jarmo', df)
 print(leon.wordlists[0])
-print(leon.plot_vocab_dev())
+print(leon.plot_vocab_dev(['TFF', 'FTF']))
 
 #word_type_investigation()
