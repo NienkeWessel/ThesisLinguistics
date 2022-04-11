@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import unittest
 import matplotlib.pyplot as plt
-
+import math
 
 def tolerance_formula(N, e):
     '''
@@ -204,7 +204,7 @@ class ChildDevelopment:
 # ----------------------------------------------
 
 
-ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝']#, '͡'] 
+ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝', 'ʊ', 'ɯ']#, '͡'] 
 agnostic_symbols = ['͡', 'ː'] # symbols that can either be a vowel or consonant
 
 def save_data(filename, df):
@@ -277,6 +277,8 @@ def build_syllable_representation(word, secondary=False):
     
     Returns the representation of the syllable in the form of a list of booleans, where true represents stressed and false unstressed
     """
+    if not isinstance(word, str):
+        return []
     
     representation = []
     stressed = False
@@ -319,12 +321,15 @@ class MyTest(unittest.TestCase):
             #simple two syllable words with different stress
             self.assertEqual([False, True], build_syllable_representation('koːˈlɛin'))
             self.assertEqual([True, False], build_syllable_representation('ˈpukə'))
+            self.assertEqual([True, False], build_syllable_representation('ˈɡʊkʊk'))
             
             #other
             self.assertEqual([True, False, False], build_syllable_representation('ˈʔaːˌkleːdə'))
             
             self.assertEqual([True, False], build_syllable_representation('ˈpinoːŭ'))
             self.assertEqual([True, False, False], build_syllable_representation('ˈzeˌot͡jɑ̈s'))
+            
+            
 
     def test_is_final_syllable_heavy(self):
         self.assertEqual(True, is_final_syllable_heavy('ˈzeˌot͡jɑ̈s'))
