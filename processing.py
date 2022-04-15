@@ -201,11 +201,14 @@ class ChildDevelopment:
         plt.legend()
         plt.show()
     
-# ----------------------------------------------
+# -------------------------------------------------------------------------------------
+# DATA FILE OPERATIONS
+# 
+# This part of the code deals with file operations, such as reading and closing files
+# -------------------------------------------------------------------------------------
 
 
-ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝', 'ʊ', 'ɯ']#, '͡'] 
-agnostic_symbols = ['͡', 'ː'] # symbols that can either be a vowel or consonant
+
 
 def save_data(filename, df):
     """
@@ -269,7 +272,10 @@ def write_stats_to_csv(filename, a,b,c,d,e):
         for i in range(10):
             writer.writerow([i, a[i], b[i], c[i], d[i], e[i]])
 
-    
+# -------------------------------------------------------------------------------------
+
+ipa_vowels = ['a', 'ɑ', 'œ', 'y', 'o', 'ɑ̈', 'i', 'u', 'ɪ', 'ə', 'ɛ', 'e', 'ɔ', 'ʌ', 'ø̈', 'ɛ̝','ʉ', 'œ̞', 'œ', 'ɛ̞', 'ʔ', 'ɒ','ø', 'æ̝', 'ə̆', 'o͡', 'o̝', 'ʊ', 'ɯ']#, '͡'] 
+agnostic_symbols = ['͡', 'ː'] # symbols that can either be a vowel or consonant
     
 def build_syllable_representation(word, secondary=False):
     """
