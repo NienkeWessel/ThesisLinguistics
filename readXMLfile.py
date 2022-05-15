@@ -4,7 +4,7 @@ import lxml.etree as etree
 import os
 import pandas as pd
 import fnmatch
-
+import math
 
 def readXMLfile(filename, df = pd.DataFrame(columns=['Name','Age','word','model','actual'])):
     """
@@ -28,7 +28,7 @@ def readXMLfile(filename, df = pd.DataFrame(columns=['Name','Age','word','model'
     try: 
         child_age = session.getElementsByTagName('participants')[0].getElementsByTagName('participant')[0].getElementsByTagName('age')[0].firstChild.data
     except:
-        child_age = 'N/A'
+        child_age = math.nan
     
     transcript = session.getElementsByTagName('transcript')[0].getElementsByTagName('u')
     for u in transcript: 
@@ -39,9 +39,17 @@ def readXMLfile(filename, df = pd.DataFrame(columns=['Name','Age','word','model'
         col = []
     
         for attr in l:
-            ipa = attr.getElementsByTagName('pg')[0].getElementsByTagName('w')[0].firstChild
-            if ipa is None:
-                # if ipa is None, something is wrong, so we skip; no use to continue in this word, so break
+            ipas = attr.getElementsByTagName('pg')
+            found_ipa = False
+            for ipa_cand in ipas:
+                #print(ipa_cand.toprettyxml())
+                ipa_cand_unpacked = ipa_cand.getElementsByTagName('w')[0].firstChild
+                if ipa_cand_unpacked is not None:
+                    ipa = ipa_cand_unpacked
+                    found_ipa = True
+                    break
+            if not found_ipa:
+                # if ipa is None for all of them, something is wrong, so we skip; no use to continue in this word, so break
                 skip = True
                 break
             else: 
@@ -54,6 +62,7 @@ def readXMLfile(filename, df = pd.DataFrame(columns=['Name','Age','word','model'
         else:
             # We skipped one, so we increment the counter
             skipcounter += 1
+            
 
 
     # OLD STUFF 
